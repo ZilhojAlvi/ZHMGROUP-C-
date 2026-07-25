@@ -1,0 +1,8 @@
+[
+  { "toolId": "t-1", "toolName": "Plumbing Repair Kit", "category": "Plumbing", "workingRate": 800, "availability": true },
+  { "toolId": "t-2", "toolName": "Electrical Diagnostic Unit", "category": "Electrical", "workingRate": 950, "availability": true },
+  { "toolId": "t-3", "toolName": "HVAC Servicing Rig", "category": "Climate Control", "workingRate": 1200, "availability": true },
+  { "toolId": "t-4", "toolName": "Painting & Finishing Set", "category": "Interior", "workingRate": 600, "availability": false },
+  { "toolId": "t-5", "toolName": "Landscaping Equipment", "category": "Exterior", "workingRate": 700, "availability": true },
+  { "toolId": "t-6", "toolName": "Pest Control Sprayer", "category": "Sanitation", "workingRate": 550, "availability": true }
+]

@@ -1,0 +1,376 @@
+// ============================================================================
+// SRMS — Prisma schema (PostgreSQL)
+// ============================================================================
+// Run `npx prisma migrate dev --name init` after configuring DATABASE_URL
+// in your .env file to create the database and apply this schema.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Pooled connection (pgbouncer, port 6543) — used at runtime by the app.
+  url       = env("DATABASE_URL")
+  // Direct connection (port 5432) — used only for migrations. Required by
+  // Supabase because its pooled connection doesn't support prepared
+  // statements, which `prisma migrate` needs. Same value as DATABASE_URL
+  // when you're not using a pooler (e.g. local Postgres).
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+enum Role {
+  customer
+  agent
+  admin
+}
+
+enum PropertyType {
+  residential
+  commercial
+  land
+}
+
+enum PropertyStatus {
+  available
+  booked
+  under_review
+  sold
+  inactive
+}
+
+enum ListingPurpose {
+  sale
+  rent
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+  rejected
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  card
+  bank_transfer
+  mobile_wallet
+  cash
+}
+
+enum AgentVerificationStatus {
+  pending
+  verified
+  rejected
+}
+
+enum NotificationType {
+  success
+  error
+  info
+  warning
+}
+
+enum VerificationTokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+// ----------------------------------------------------------------------------
+// Auth: User / Profile / Session / VerificationToken
+// ----------------------------------------------------------------------------
+
+/// Core authentication record. Never expose `passwordHash` to the client.
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  role               Role      @default(customer)
+  isActive           Boolean   @default(true)
+  isEmailVerified    Boolean   @default(false)
+  failedLoginCount   Int       @default(0)
+  lockedUntil        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  profile            Profile?
+  sessions           Session[]
+  verificationTokens VerificationToken[]
+
+  properties         Property[]      @relation("AgentProperties")
+  favorites          Favorite[]
+  bookingsAsCustomer Booking[]       @relation("CustomerBookings")
+  bookingsAsAgent    Booking[]       @relation("AgentBookings")
+  payments           Payment[]
+  sentMessages       Message[]       @relation("SentMessages")
+  receivedMessages   Message[]       @relation("ReceivedMessages")
+  notifications      Notification[]
+  activityLogs       ActivityLog[]
+
+  @@index([role])
+  @@map("users")
+}
+
+/// Profile data split out from the auth record (1:1 with User).
+model Profile {
+  id                  String                   @id @default(cuid())
+  userId              String                   @unique
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fname               String
+  lname               String
+  phone               String?
+  avatarUrl           String?
+
+  // Agent-only fields
+  licenceNumber       String?
+  agency              String?
+  verificationStatus  AgentVerificationStatus?
+  rating              Float                    @default(0)
+  propertiesListed    Int                      @default(0)
+
+  // Admin-only fields
+  department          String?
+
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  @@map("profiles")
+}
+
+/// Persisted, revocable server-side sessions (backing refresh tokens / "logout everywhere").
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Single-use tokens for email verification and password resets.
+model VerificationToken {
+  id        String                @id @default(cuid())
+  userId    String
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String                @unique
+  type      VerificationTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime              @default(now())
+
+  @@index([userId, type])
+  @@map("verification_tokens")
+}
+
+// ----------------------------------------------------------------------------
+// Properties
+// ----------------------------------------------------------------------------
+
+model Property {
+  id              String         @id @default(cuid())
+  title           String
+  description     String
+  type            PropertyType
+  purpose         ListingPurpose
+  price           Float
+  squareFeet      Int
+  parkingSpace    Int            @default(0)
+  address         String
+  city            String
+  state           String
+  zipCode         String
+  latitude        Float
+  longitude       Float
+  images          String[]
+  status          PropertyStatus @default(available)
+  yearBuilt       Int
+  taxRate         Float          @default(0)
+
+  // Amenities (flattened)
+  furnished       Boolean        @default(false)
+  petFriendly     Boolean        @default(false)
+  pool            Boolean        @default(false)
+  gym             Boolean        @default(false)
+  security        Boolean        @default(false)
+  elevator        Boolean        @default(false)
+  internet        Boolean        @default(false)
+
+  // Residential-only
+  bedrooms        Int?
+  bathrooms       Int?
+  hasGarden       Boolean?
+
+  // Commercial-only
+  floors          Int?
+  officeRooms     Int?
+  zoningType      String?
+  loadingDock     Boolean?
+
+  // Land-only (also used for plots)
+  facing          String?
+  roadWidthFt     Float?
+  landUseType     String?
+
+  propertySubType String
+
+  agentId         String
+  agent           User           @relation("AgentProperties", fields: [agentId], references: [id], onDelete: Cascade)
+
+  favorites       Favorite[]
+  bookings        Booking[]
+  messages        Message[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([agentId])
+  @@index([type])
+  @@index([status])
+  @@index([city])
+  @@map("properties")
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@index([propertyId])
+  @@map("favorites")
+}
+
+// ----------------------------------------------------------------------------
+// Bookings / Payments
+// ----------------------------------------------------------------------------
+
+model Booking {
+  id           String        @id @default(cuid())
+  propertyId   String
+  property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  agentId      String
+  agent        User          @relation("AgentBookings", fields: [agentId], references: [id], onDelete: Cascade)
+
+  bookingDate  DateTime      @default(now())
+  moveInDate   DateTime
+  status       BookingStatus @default(pending)
+  totalAmount  Float
+  notes        String?
+
+  payments     Payment[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([customerId])
+  @@index([agentId])
+  @@index([propertyId])
+  @@map("bookings")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  bookingId      String
+  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount         Float
+  paymentDate    DateTime      @default(now())
+  method         PaymentMethod
+  status         PaymentStatus @default(pending)
+  transactionRef String        @unique
+
+  createdAt      DateTime      @default(now())
+
+  @@index([customerId])
+  @@index([bookingId])
+  @@map("payments")
+}
+
+// ----------------------------------------------------------------------------
+// Messaging / Notifications / Activity
+// ----------------------------------------------------------------------------
+
+model Message {
+  id         String    @id @default(cuid())
+  senderId   String
+  sender     User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  content    String
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("messages")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(info)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("activity_logs")
+}
+
+// ----------------------------------------------------------------------------
+// Maintenance Tools (unchanged domain concept from the original mock data)
+// ----------------------------------------------------------------------------
+
+model MaintenanceTool {
+  id           String  @id @default(cuid())
+  toolName     String
+  category     String
+  workingRate  Float
+  availability Boolean @default(true)
+
+  @@map("maintenance_tools")
+}

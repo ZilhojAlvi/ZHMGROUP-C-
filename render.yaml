@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: srems
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: NODE_ENV=development npm install && npx prisma db push --accept-data-loss && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: NODE_ENV
+        value: production
+      # Set these in the Render dashboard (Environment tab) with the
+      # connection strings from your Supabase project
+      # (Project Settings > Database). See docs/SUPABASE_SETUP.md.
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+    autoDeploy: true

@@ -1,48 +1,32 @@
-import dns from "node:dns";
-dns.setDefaultResultOrder("ipv4first");
-import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import { Resend } from "resend";
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-const EMAIL_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
-const EMAIL_PORT = Number(process.env.EMAIL_PORT || 587);
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 const APP_NAME = "SRMS";
+const FROM_EMAIL = process.env.FROM_EMAIL || "onboarding@resend.dev";
 
-let transporter: nodemailer.Transporter | null = null;
-
-function getTransporter(): nodemailer.Transporter | null {
-  if (!EMAIL_USER || !EMAIL_PASSWORD) return null;
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: EMAIL_HOST,
-      port: EMAIL_PORT,
-      secure: EMAIL_PORT === 465,
-      auth: { user: EMAIL_USER, pass: EMAIL_PASSWORD },
-      family: 4, // force IPv4 to avoid Render's IPv6 timeout issue
-    } as SMTPTransport.Options);
-  }
-  return transporter;
-}
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 async function sendMail(to: string, subject: string, html: string, text: string): Promise<void> {
-  const t = getTransporter();
-  if (!t) {
-    // In local development without EMAIL_USER/EMAIL_PASSWORD configured, log
+  if (!resend) {
+    // In local development without RESEND_API_KEY configured, log
     // instead of throwing, so the auth flow is still testable end-to-end.
     console.warn(
-      `[email] EMAIL_USER/EMAIL_PASSWORD not configured — printing email instead of sending.\nTo: ${to}\nSubject: ${subject}\n${text}`
+      `[email] RESEND_API_KEY not configured — printing email instead of sending.\nTo: ${to}\nSubject: ${subject}\n${text}`
     );
     return;
   }
-  await t.sendMail({
-    from: `"${APP_NAME}" <${EMAIL_USER}>`,
+  const { error } = await resend.emails.send({
+    from: `${APP_NAME} <${FROM_EMAIL}>`,
     to,
     subject,
     html,
     text,
   });
+  if (error) {
+    console.error("[email] Resend error:", error);
+    throw new Error("Failed to send email");
+  }
 }
 
 export async function sendVerificationEmail(to: string, fname: string, token: string): Promise<void> {

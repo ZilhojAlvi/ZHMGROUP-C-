@@ -1,7 +1,7 @@
 import dns from "node:dns";
 dns.setDefaultResultOrder("ipv4first");
-
 import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
@@ -21,7 +21,7 @@ function getTransporter(): nodemailer.Transporter | null {
       secure: EMAIL_PORT === 465,
       auth: { user: EMAIL_USER, pass: EMAIL_PASSWORD },
       family: 4, // force IPv4 to avoid Render's IPv6 timeout issue
-    });
+    } as SMTPTransport.Options);
   }
   return transporter;
 }

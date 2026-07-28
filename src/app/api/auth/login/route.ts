@@ -69,14 +69,13 @@ export async function POST(req: NextRequest) {
     return apiError(genericError, 401);
   }
 
- // Email verification requirement disabled — users can log in without verifying.
-  // if (!user.isEmailVerified) {
-  //   return apiError(
-  //     "Please verify your email address before logging in. Check your inbox for the verification link.",
-  //     403,
-  //     { code: "EMAIL_NOT_VERIFIED" }
-  //   );
-  // }
+ if (!user.isEmailVerified) {
+    return apiError(
+      "Please verify your email address before logging in. Check your inbox for the verification link.",
+      403,
+      { code: "EMAIL_NOT_VERIFIED" }
+    );
+  }
 
   // Reset failed-attempt counter on success.
   if (user.failedLoginCount > 0 || user.lockedUntil) {

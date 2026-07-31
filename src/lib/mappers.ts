@@ -182,6 +182,10 @@ export function mapBooking(b: DbBooking): BookingRecord {
     status: b.status,
     totalAmount: b.totalAmount,
     notes: b.notes ?? undefined,
+    depositAmount: b.depositAmount ?? undefined,
+    depositPercent: b.depositPercent ?? undefined,
+    agreementDate: b.agreementDate ? b.agreementDate.toISOString() : undefined,
+    expiresAt: b.expiresAt ? b.expiresAt.toISOString() : undefined,
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   };

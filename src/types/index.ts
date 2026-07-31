@@ -144,6 +144,14 @@ export interface BookingRecord {
   status: BookingStatus;
   totalAmount: number;
   notes?: string;
+  /** For deposit-based bookings (card/bank_transfer/mobile_wallet): the amount actually charged now (~10% of totalAmount). */
+  depositAmount?: number;
+  /** The deposit percentage charged (5–10). */
+  depositPercent?: number;
+  /** Date by which the full sale/rental agreement + remaining balance must be completed. Deposit-based bookings only. */
+  agreementDate?: string;
+  /** Cash-on-visit bookings only: the booking auto-cancels if not followed up on by this time (7 days from creation). */
+  expiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }

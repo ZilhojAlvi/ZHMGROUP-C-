@@ -46,11 +46,15 @@ export const BookingService = {
     customerId: string;
     amount: number;
     method: PaymentMethod;
+    agreementDate?: string;
+    depositPercent?: number;
   }): Promise<PaymentRecord> {
     const { payment } = await apiPost<{ payment: PaymentRecord }>("/api/payments", {
       bookingId: params.bookingId,
       amount: params.amount,
       method: params.method,
+      agreementDate: params.agreementDate,
+      depositPercent: params.depositPercent,
     });
     return payment;
   },

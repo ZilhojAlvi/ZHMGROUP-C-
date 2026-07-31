@@ -100,7 +100,10 @@ function BookingFlow() {
     }
   };
 
-  const handlePayment = async (method: PaymentMethod) => {
+  const handlePayment = async (
+    method: PaymentMethod,
+    extra?: { agreementDate?: string; depositPercent?: number }
+  ) => {
     if (!booking || !session) return;
     setIsSubmitting(true);
     try {
@@ -109,11 +112,23 @@ function BookingFlow() {
         customerId: session.userId,
         amount: booking.totalAmount,
         method,
+        agreementDate: extra?.agreementDate,
+        depositPercent: extra?.depositPercent,
       });
       setPayment(result);
-      if (result.status === "success") {
-        setBooking({ ...booking, status: "confirmed" });
-        toast.success("Payment verified — booking confirmed!");
+      if (method === "cash") {
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        setBooking({ ...booking, status: "pending", expiresAt });
+        toast.success("Property held for 7 days — visit or contact the agent to finalize.");
+        setStep(2);
+      } else if (result.status === "success") {
+        setBooking({
+          ...booking,
+          status: "confirmed",
+          depositAmount: result.amount,
+          agreementDate: extra?.agreementDate,
+        });
+        toast.success("Deposit verified — booking confirmed!");
         setStep(2);
       } else {
         toast.error("Payment could not be verified. Please try again.");
@@ -200,10 +215,12 @@ function BookingFlow() {
                   <CheckCircle2 size={30} />
                 </div>
                 <h2 className="mt-4 font-display text-xl font-bold text-navy-900 dark:text-white">
-                  Booking confirmed!
+                  {payment.method === "cash" ? "Property held for 7 days!" : "Deposit received — booking confirmed!"}
                 </h2>
                 <p className="mt-1 text-sm text-navy-400">
-                  A receipt has been generated below. Track this booking anytime from your history.
+                  {payment.method === "cash"
+                    ? "Visit or contact the agent within 7 days to pay in cash and finalize, or this hold expires automatically."
+                    : "A receipt has been generated below. Track this booking anytime from your history."}
                 </p>
               </Card>
 
@@ -216,7 +233,7 @@ function BookingFlow() {
                     </p>
                   </div>
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                    Paid
+                    {payment.method === "cash" ? "Held" : "Deposit Paid"}
                   </span>
                 </div>
                 <div className="space-y-3 py-4 text-sm">
@@ -225,13 +242,27 @@ function BookingFlow() {
                   <Row label="Move-in date" value={formatDate(booking.moveInDate)} />
                   <Row label="Payment method" value={payment.method.replace("_", " ")} />
                   <Row label="Payment date" value={formatDateTime(payment.paymentDate)} />
+                  {payment.method === "cash" && booking.expiresAt && (
+                    <Row label="Hold expires" value={formatDateTime(booking.expiresAt)} />
+                  )}
+                  {payment.method !== "cash" && booking.agreementDate && (
+                    <Row label="Agreement due by" value={formatDate(booking.agreementDate)} />
+                  )}
                 </div>
                 <div className="flex items-center justify-between border-t border-dashed border-black/10 dark:border-white/10 pt-4">
-                  <span className="text-sm font-medium text-navy-500">Amount paid</span>
+                  <span className="text-sm font-medium text-navy-500">
+                    {payment.method === "cash" ? "Amount paid now" : "Deposit paid"}
+                  </span>
                   <span className="font-display text-xl font-bold text-navy-900 dark:text-white">
                     {formatCurrency(payment.amount)}
                   </span>
                 </div>
+                {payment.method !== "cash" && (
+                  <p className="mt-3 rounded-xl bg-surface-muted px-4 py-3 text-xs text-navy-400">
+                    Remaining balance of {formatCurrency(booking.totalAmount - payment.amount)} is due
+                    when you sign the full agreement, by {booking.agreementDate ? formatDate(booking.agreementDate) : "the agreed date"}.
+                  </p>
+                )}
               </Card>
 
               <div className="flex gap-3">

@@ -10,6 +10,10 @@ const passwordSchema = z
 
 const emailSchema = z.string().trim().toLowerCase().email("Enter a valid email address.");
 
+const gmailEmailSchema = emailSchema.refine((val) => val.endsWith("@gmail.com"), {
+  message: "Only Gmail addresses (ending in @gmail.com) are allowed.",
+});
+
 const phoneSchema = z
   .string()
   .trim()
@@ -21,7 +25,7 @@ export const signupSchema = z
   .object({
     fname: z.string().trim().min(1, "First name is required.").max(60),
     lname: z.string().trim().min(1, "Last name is required.").max(60),
-    email: emailSchema,
+    email: gmailEmailSchema,
     password: passwordSchema,
     phone: phoneSchema,
     role: z.enum(["customer", "agent"]).default("customer"),
@@ -120,6 +124,13 @@ export const paymentCreateSchema = z
     bookingId: z.string().min(1),
     amount: z.number().positive(),
     method: z.enum(["card", "bank_transfer", "mobile_wallet", "cash"]),
+    // Required for card/bank_transfer/mobile_wallet (deposit-based) bookings —
+    // the date by which the buyer/tenant must complete the full agreement and
+    // remaining balance. Ignored for cash-on-visit bookings.
+    agreementDate: z.string().min(1).optional(),
+    // Customer-selected deposit percentage (1-10). Ignored for cash-on-visit
+    // bookings; defaults to 10 server-side when omitted.
+    depositPercent: z.number().min(1).max(10).optional(),
   })
   .strict();
 

@@ -282,6 +282,16 @@ model Booking {
   totalAmount  Float
   notes        String?
 
+  // Deposit-based bookings (card/bank_transfer/mobile_wallet): only a small
+  // percentage is charged now; the rest is settled by the agreement date.
+  depositAmount  Float?
+  depositPercent Int?
+  agreementDate  DateTime?
+
+  // Cash-on-visit bookings: held for a limited window with no online payment.
+  // If nobody follows up by this time, the booking auto-cancels.
+  expiresAt      DateTime?
+
   payments     Payment[]
 
   createdAt    DateTime      @default(now())

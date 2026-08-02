@@ -205,6 +205,14 @@ export interface PropertyFilters {
   sortBy?: "price_asc" | "price_desc" | "newest" | "size_desc";
 }
 
+export interface SavedSearchRecord {
+  savedSearchId: string;
+  userId: string;
+  name: string;
+  filters: PropertyFilters;
+  createdAt: string;
+}
+
 export interface SystemReport {
   generatedAt: string;
   totalUsers: number;

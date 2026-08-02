@@ -3,6 +3,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { CompareBar } from "@/components/common/CompareBar";
 import { Providers } from "./providers";
 
 // Note: next/font/google requires fetching webfonts at *build* time, which
@@ -37,6 +38,7 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
           </ErrorBoundary>
           <Footer />
+          <CompareBar />
         </Providers>
       </body>
     </html>

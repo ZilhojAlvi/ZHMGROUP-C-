@@ -3,15 +3,17 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { SearchX } from "lucide-react";
+import { SearchX, BellPlus } from "lucide-react";
 import { PropertyFiltersPanel } from "@/features/property/PropertyFilters";
 import { PropertyCard } from "@/features/property/PropertyCard";
 import { PropertyCardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 import { useProperties } from "@/hooks/useProperties";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuthStore } from "@/store/authStore";
 import { FavoriteService } from "@/services/FavoriteService";
+import { SavedSearchService } from "@/services/SavedSearchService";
 import { PropertyFilters } from "@/types";
 
 function PropertiesListingInner() {
@@ -60,15 +62,44 @@ function PropertiesListingInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedKeyword]);
 
+  const [isSavingSearch, setIsSavingSearch] = useState(false);
+  const handleSaveSearch = async () => {
+    if (!session || session.role !== "customer") {
+      toast.error("Sign in as a customer to save searches.");
+      return;
+    }
+    const name = window.prompt(
+      "Name this search (e.g. \"3-bed flats in Uttara under 50 lakh\")",
+      filters.city ? `${filters.type ?? "Any"} in ${filters.city}` : "My search"
+    );
+    if (!name || !name.trim()) return;
+    setIsSavingSearch(true);
+    try {
+      await SavedSearchService.create(name.trim(), { ...filters, keyword: keywordInput });
+      toast.success("Saved! We'll notify you when a matching property is listed.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save this search.");
+    } finally {
+      setIsSavingSearch(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mb-8 animate-fade-up">
-        <h1 className="font-display text-2xl font-bold text-navy-900 dark:text-white sm:text-3xl">
-          Explore properties
-        </h1>
-        <p className="mt-1 text-sm text-navy-400">
-          {isLoading ? "Searching..." : `${properties.length} propert${properties.length === 1 ? "y" : "ies"} found`}
-        </p>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-navy-900 dark:text-white sm:text-3xl">
+            Explore properties
+          </h1>
+          <p className="mt-1 text-sm text-navy-400">
+            {isLoading ? "Searching..." : `${properties.length} propert${properties.length === 1 ? "y" : "ies"} found`}
+          </p>
+        </div>
+        {session?.role === "customer" && (
+          <Button variant="outline" size="sm" onClick={handleSaveSearch} isLoading={isSavingSearch}>
+            <BellPlus size={15} /> Save this search
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">

@@ -24,6 +24,8 @@ import {
   Building2,
   Star,
   Receipt,
+  Calculator,
+  Scale,
 } from "lucide-react";
 import { Property } from "@/types";
 import { PropertyService } from "@/services/PropertyService";
@@ -318,6 +320,14 @@ export default function PropertyDetailsPage() {
             <p className="mt-3 text-center text-xs text-navy-400">
               You won&apos;t be charged yet — review dates on the next step.
             </p>
+            {property.purpose === "sale" && (
+              <Link
+                href={`/tools/emi-calculator?price=${property.price}`}
+                className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-300"
+              >
+                <Calculator size={13} /> Calculate EMI for this property
+              </Link>
+            )}
           </Card>
 
           {agent && (

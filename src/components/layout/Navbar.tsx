@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, Menu, X, Moon, Sun, Bell, LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { Building2, Menu, X, Moon, Sun, Bell, BellRing, LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUIStore } from "@/store/uiStore";
 import { useNotificationStore } from "@/store/notificationStore";
@@ -25,6 +25,8 @@ export function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Properties", href: "/properties" },
+    { label: "Map", href: "/map" },
+    { label: "EMI Calculator", href: "/tools/emi-calculator" },
   ];
 
   const handleLogout = async () => {
@@ -178,6 +180,15 @@ export function Navbar() {
                     >
                       <LayoutDashboard size={15} /> Dashboard
                     </Link>
+                    {session.role === "customer" && (
+                      <Link
+                        href="/saved-searches"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-navy-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
+                      >
+                        <BellRing size={15} /> Saved Searches
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-rose-500 hover:bg-rose-500/10"
@@ -235,6 +246,15 @@ export function Navbar() {
                 >
                   Dashboard
                 </Link>
+                {session.role === "customer" && (
+                  <Link
+                    href="/saved-searches"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-navy-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
+                  >
+                    Saved Searches
+                  </Link>
+                )}
                 <Link
                   href="/profile"
                   onClick={() => setMobileOpen(false)}

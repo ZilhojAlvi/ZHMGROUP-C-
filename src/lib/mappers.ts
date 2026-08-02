@@ -1,4 +1,4 @@
-import type { Prisma, User, Profile, Property as DbProperty, Booking as DbBooking, Payment as DbPayment } from "@prisma/client";
+import type { Prisma, User, Profile, Property as DbProperty, Booking as DbBooking, Payment as DbPayment, SavedSearch as DbSavedSearch } from "@prisma/client";
 import type {
   UserRecord,
   Property,
@@ -7,6 +7,8 @@ import type {
   LandProperty,
   BookingRecord,
   PaymentRecord,
+  SavedSearchRecord,
+  PropertyFilters,
 } from "@/types";
 
 type UserWithProfile = User & { profile: Profile | null };
@@ -201,5 +203,15 @@ export function mapPayment(p: DbPayment): PaymentRecord {
     method: p.method,
     status: p.status,
     transactionRef: p.transactionRef,
+  };
+}
+
+export function mapSavedSearch(s: DbSavedSearch): SavedSearchRecord {
+  return {
+    savedSearchId: s.id,
+    userId: s.userId,
+    name: s.name,
+    filters: s.filters as unknown as PropertyFilters,
+    createdAt: s.createdAt.toISOString(),
   };
 }

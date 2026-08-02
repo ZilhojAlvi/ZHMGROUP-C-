@@ -4,6 +4,8 @@ import { requireUser, AuthError } from "@/lib/auth/session";
 import { apiError, apiOk, logActivity } from "@/lib/apiHelpers";
 import { propertySchema, firstZodError } from "@/lib/auth/validators";
 import { mapProperty, propertyInputToPrisma } from "@/lib/mappers";
+import { propertyMatchesFilters } from "@/lib/savedSearchMatch";
+import type { PropertyFilters } from "@/types";
 import type { Prisma } from "@prisma/client";
 
 /** Public listing endpoint with the same filter set as the original PropertyService.search(). */
@@ -103,6 +105,27 @@ export async function POST(req: NextRequest) {
     }
 
     await logActivity({ userId: current.id, action: "property.created", metadata: { propertyId: property.id } });
+
+    // Alert customers whose saved search matches this brand-new listing.
+    try {
+      const savedSearches = await prisma.savedSearch.findMany();
+      const matches = savedSearches.filter((s) =>
+        propertyMatchesFilters(property, s.filters as unknown as PropertyFilters)
+      );
+      if (matches.length > 0) {
+        await prisma.notification.createMany({
+          data: matches.map((s) => ({
+            userId: s.userId,
+            type: "info" as const,
+            title: "New property matches your saved search",
+            message: `"${property.title}" in ${property.city} matches your saved search "${s.name}".`,
+          })),
+        });
+      }
+    } catch (notifyErr) {
+      // Never let a notification failure block listing creation.
+      console.error("[POST /api/properties] saved-search notify failed:", notifyErr);
+    }
 
     return apiOk({ property: mapProperty(property) }, 201);
   } catch (err) {

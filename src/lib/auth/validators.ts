@@ -128,9 +128,8 @@ export const paymentCreateSchema = z
     // the date by which the buyer/tenant must complete the full agreement and
     // remaining balance. Ignored for cash-on-visit bookings.
     agreementDate: z.string().min(1).optional(),
-    // Customer-selected deposit percentage (1-10). Ignored for cash-on-visit
-    // bookings; defaults to 10 server-side when omitted.
-    depositPercent: z.number().min(1).max(10).optional(),
+    // Customer-chosen deposit percentage (1–10%) for deposit-based methods.
+    depositPercent: z.number().int().min(1).max(10).optional(),
   })
   .strict();
 
@@ -145,6 +144,13 @@ export const messageCreateSchema = z
 export const userActiveSchema = z.object({ isActive: z.boolean() }).strict();
 
 export const agentVerifySchema = z.object({ approve: z.boolean() }).strict();
+
+export const savedSearchCreateSchema = z
+  .object({
+    name: z.string().trim().min(1, "Give this search a name.").max(80),
+    filters: z.record(z.string(), z.unknown()),
+  })
+  .strict();
 
 /** Formats the first Zod issue into a user-friendly single-string message. */
 export function firstZodError(error: z.ZodError): string {

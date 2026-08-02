@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BedDouble, Bath, Ruler, MapPin, ParkingSquare, Heart } from "lucide-react";
+import { BedDouble, Bath, Ruler, MapPin, ParkingSquare, Heart, Scale } from "lucide-react";
 import { Property } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/utils/formatters";
 import { PROPERTY_STATUS_COLORS } from "@/utils/constants";
 import { cn } from "@/lib/utils/cn";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
+import { useCompareStore, MAX_COMPARE_ITEMS } from "@/store/compareStore";
+import toast from "react-hot-toast";
 
 interface PropertyCardProps {
   property: Property;
@@ -21,6 +23,17 @@ interface PropertyCardProps {
 export function PropertyCard({ property, saved, onToggleSave, compact }: PropertyCardProps) {
   const [imgError, setImgError] = useState(false);
   const isResidential = property.type === "residential";
+  const { toggle, isSelected, propertyIds } = useCompareStore();
+  const inCompare = isSelected(property.propertyId);
+
+  const handleToggleCompare = (e: MouseEvent) => {
+    e.preventDefault();
+    if (!inCompare && propertyIds.length >= MAX_COMPARE_ITEMS) {
+      toast.error(`You can compare up to ${MAX_COMPARE_ITEMS} properties at a time.`);
+      return;
+    }
+    toggle(property.propertyId);
+  };
 
   return (
     <Card
@@ -47,21 +60,34 @@ export function PropertyCard({ property, saved, onToggleSave, compact }: Propert
             <Badge color={PROPERTY_STATUS_COLORS[property.status] as never} className="capitalize shadow">
               {property.status.replace("_", " ")}
             </Badge>
-            {onToggleSave && (
+            <div className="flex items-center gap-2">
+              {onToggleSave && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onToggleSave(property.propertyId);
+                  }}
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full glass transition-colors",
+                    saved ? "text-rose-500" : "text-white"
+                  )}
+                  aria-label="Save property"
+                >
+                  <Heart size={15} fill={saved ? "currentColor" : "none"} />
+                </button>
+              )}
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  onToggleSave(property.propertyId);
-                }}
+                onClick={handleToggleCompare}
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full glass transition-colors",
-                  saved ? "text-rose-500" : "text-white"
+                  inCompare ? "text-brand-400" : "text-white"
                 )}
-                aria-label="Save property"
+                aria-label="Add to compare"
+                title="Add to compare"
               >
-                <Heart size={15} fill={saved ? "currentColor" : "none"} />
+                <Scale size={15} fill={inCompare ? "currentColor" : "none"} />
               </button>
-            )}
+            </div>
           </div>
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-950/80 to-transparent p-3">
             <span className="font-display text-lg font-bold text-white">

@@ -24,19 +24,14 @@
     "date-fns": "^4.4.0",
     "google-auth-library": "^10.9.1",
     "jose": "^5.9.6",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
     "nodemailer": "^6.9.16",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hot-toast": "^2.6.0",
-<<<<<<< HEAD
-
     "react-leaflet": "^5.0.0",
-
-=======
-"react-leaflet": "^5.0.0",
->>>>>>> 44a95ff889fe21ea6719913c681212f2f1ad709c
     "recharts": "^3.9.1",
     "resend": "^6.18.1",
     "tailwind-merge": "^3.6.0",
@@ -46,6 +41,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",

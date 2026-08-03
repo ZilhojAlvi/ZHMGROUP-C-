@@ -115,6 +115,8 @@ model User {
 
   properties         Property[]      @relation("AgentProperties")
   favorites          Favorite[]
+  savedSearches      SavedSearch[]
+
   bookingsAsCustomer Booking[]       @relation("CustomerBookings")
   bookingsAsAgent    Booking[]       @relation("AgentBookings")
   payments           Payment[]
@@ -266,6 +268,20 @@ model Favorite {
   @@map("favorites")
 }
 
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  filters   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("saved_searches")
+}
+
 // ----------------------------------------------------------------------------
 // Bookings / Payments
 // ----------------------------------------------------------------------------
@@ -279,12 +295,15 @@ model Booking {
   agentId      String
   agent        User          @relation("AgentBookings", fields: [agentId], references: [id], onDelete: Cascade)
 
-  bookingDate  DateTime      @default(now())
-  moveInDate   DateTime
-  status       BookingStatus @default(pending)
-  totalAmount  Float
-  notes        String?
-  expiresAt    DateTime?
+  bookingDate    DateTime      @default(now())
+  moveInDate     DateTime
+  status         BookingStatus @default(pending)
+  totalAmount    Float
+  notes          String?
+  expiresAt      DateTime?
+  depositAmount  Float?
+  depositPercent Int?
+  agreementDate  DateTime?
 
   payments     Payment[]
 

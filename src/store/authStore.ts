@@ -11,6 +11,7 @@ interface AuthState {
   error: string | null;
   hydrate: () => Promise<void>;
   login: (email: string, password: string) => Promise<AuthSession>;
+  loginWithGoogle: (credential: string) => Promise<AuthSession>;
   signup: (payload: SignupPayload) => Promise<{ fname: string; email: string }>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -36,6 +37,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       return session;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed.";
+      set({ isLoading: false, error: message });
+      throw err;
+    }
+  },
+
+  loginWithGoogle: async (credential: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const session = await AuthService.loginWithGoogle(credential);
+      set({ session, isLoading: false, isHydrated: true });
+      return session;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Google sign-in failed.";
       set({ isLoading: false, error: message });
       throw err;
     }

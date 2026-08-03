@@ -31,4 +31,10 @@ services:
         sync: false
       - key: EMAIL_PASSWORD
         sync: false
+      # From Google Cloud Console > APIs & Services > Credentials
+      # (OAuth client ID > Web application). Same value in both.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        sync: false
     autoDeploy: true

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils/cn";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import {
   validateEmail,
   validatePassword,
@@ -200,6 +201,17 @@ export default function SignupPage() {
             Create account <ArrowRight size={16} />
           </Button>
         </form>
+
+        {role === "customer" && (
+          <>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-navy-200 dark:bg-navy-700" />
+              <span className="text-xs font-medium uppercase text-navy-400">or</span>
+              <div className="h-px flex-1 bg-navy-200 dark:bg-navy-700" />
+            </div>
+            <GoogleSignInButton mode="signup_with" />
+          </>
+        )}
 
         <p className="mt-6 text-center text-sm text-navy-400">
           Already have an account?{" "}

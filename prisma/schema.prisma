@@ -97,7 +97,10 @@ enum VerificationTokenType {
 model User {
   id                 String    @id @default(cuid())
   email              String    @unique
-  passwordHash       String
+  /// Null for accounts created via "Sign in with Google" (no password set).
+  passwordHash       String?
+  /// Google's stable account id ("sub" claim). Set only for Google-authenticated users.
+  googleId           String?   @unique
   role               Role      @default(customer)
   isActive           Boolean   @default(true)
   isEmailVerified    Boolean   @default(false)
@@ -119,7 +122,6 @@ model User {
   receivedMessages   Message[]       @relation("ReceivedMessages")
   notifications      Notification[]
   activityLogs       ActivityLog[]
-  savedSearches      SavedSearch[]
 
   @@index([role])
   @@map("users")
@@ -283,16 +285,6 @@ model Booking {
   totalAmount  Float
   notes        String?
 
-  // Deposit-based bookings (card/bank_transfer/mobile_wallet): only a small
-  // percentage is charged now; the rest is settled by the agreement date.
-  depositAmount  Float?
-  depositPercent Int?
-  agreementDate  DateTime?
-
-  // Cash-on-visit bookings: held for a limited window with no online payment.
-  // If nobody follows up by this time, the booking auto-cancels.
-  expiresAt      DateTime?
-
   payments     Payment[]
 
   createdAt    DateTime      @default(now())
@@ -342,20 +334,6 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@map("messages")
-}
-
-/// A customer's saved search filters. New matching listings trigger a
-/// Notification for the owning user (checked when a property is created).
-model SavedSearch {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  filters   Json
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@map("saved_searches")
 }
 
 model Notification {

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { useAuthStore } from "@/store/authStore";
 import { AuthService } from "@/services/AuthService";
 import { validateEmail, validateRequired } from "@/utils/validators";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -122,6 +123,14 @@ export default function LoginPage() {
               </div>
             )}
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-navy-200 dark:bg-navy-700" />
+            <span className="text-xs font-medium uppercase text-navy-400">or</span>
+            <div className="h-px flex-1 bg-navy-200 dark:bg-navy-700" />
+          </div>
+
+          <GoogleSignInButton mode="signin_with" />
 
           <p className="mt-6 text-center text-sm text-navy-400">
             Don&apos;t have an account?{" "}

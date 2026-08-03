@@ -53,6 +53,14 @@ export async function POST(req: NextRequest) {
     return apiError("This account has been deactivated. Contact an administrator.", 403);
   }
 
+  if (!user.passwordHash) {
+    // Account was created via "Sign in with Google" — it has no password.
+    return apiError(
+      "This account uses Google Sign-In. Please continue with Google instead of a password.",
+      401
+    );
+  }
+
   const validPassword = await verifyPassword(password, user.passwordHash);
 
   if (!validPassword) {

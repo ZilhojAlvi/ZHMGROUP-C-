@@ -45,6 +45,17 @@ export const AuthService = {
     return { fname: user.fname, email: user.email };
   },
 
+  /**
+   * Signs in (or silently registers, on first use) with a Google ID token
+   * obtained from Google Identity Services on the client. The server
+   * verifies the token with Google before establishing a session, so only
+   * genuine, Google-verified Gmail/Google accounts can authenticate.
+   */
+  async loginWithGoogle(credential: string): Promise<AuthSession> {
+    const { user } = await apiPost<{ user: UserRecord }>("/api/auth/google", { credential });
+    return toSession(user);
+  },
+
   async logout(): Promise<void> {
     await apiPost("/api/auth/logout").catch(() => undefined);
   },

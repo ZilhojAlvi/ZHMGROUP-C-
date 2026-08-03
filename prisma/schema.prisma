@@ -284,6 +284,7 @@ model Booking {
   status       BookingStatus @default(pending)
   totalAmount  Float
   notes        String?
+  expiresAt    DateTime?
 
   payments     Payment[]
 
@@ -295,6 +296,7 @@ model Booking {
   @@index([propertyId])
   @@map("bookings")
 }
+
 
 model Payment {
   id             String        @id @default(cuid())

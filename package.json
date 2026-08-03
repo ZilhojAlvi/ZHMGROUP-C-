@@ -30,10 +30,18 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hot-toast": "^2.6.0",
+<<<<<<< HEAD
 
     
     "react-leaflet": "^5.0.0",
 
+=======
+ HEAD
+
+    "resend": "^4.0.0",
+    "react-leaflet": "^5.0.0",
+ 7e39aa6a5301162cdc265184c2c0f5f7f374450d
+>>>>>>> 03e77c566089a59773c51177e4839426df92037a
     "recharts": "^3.9.1",
     "resend": "^6.18.1",
     "tailwind-merge": "^3.6.0",

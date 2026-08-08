@@ -258,7 +258,7 @@ export function RentVsBuyCalculator({ initialPrice, initialRent, className }: Re
             />
             <Tooltip
               contentStyle={{ borderRadius: 12, border: "none", fontSize: 12 }}
-              formatter={(v: number) => formatCurrency(v)}
+             formatter={(v) => formatCurrency(Number(v))}
               labelFormatter={(y) => `Year ${y}`}
             />
             <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />

@@ -27,6 +27,7 @@ export function Navbar() {
     { label: "Properties", href: "/properties" },
     { label: "Map", href: "/map" },
     { label: "EMI Calculator", href: "/tools/emi-calculator" },
+    { label: "Rent vs Buy", href: "/tools/rent-vs-buy" },
   ];
 
   const handleLogout = async () => {

@@ -321,12 +321,20 @@ export default function PropertyDetailsPage() {
               You won&apos;t be charged yet — review dates on the next step.
             </p>
             {property.purpose === "sale" && (
-              <Link
-                href={`/tools/emi-calculator?price=${property.price}`}
-                className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-300"
-              >
-                <Calculator size={13} /> Calculate EMI for this property
-              </Link>
+              <div className="mt-3 flex items-center justify-center gap-4">
+                <Link
+                  href={`/tools/emi-calculator?price=${property.price}`}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-300"
+                >
+                  <Calculator size={13} /> EMI Calculator
+                </Link>
+                <Link
+                  href={`/tools/rent-vs-buy?price=${property.price}`}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-300"
+                >
+                  <Scale size={13} /> Rent vs Buy
+                </Link>
+              </div>
             )}
           </Card>
 
